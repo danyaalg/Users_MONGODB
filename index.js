@@ -6,7 +6,7 @@ const MongoClient = require('mongodb')
 // initialise the server
 const app = express()
 const port = 3000
-const URI = 'mongodb+srv://danyaalg:Password123@cluster0.zuzv9.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+const URI = 'mongodb+srv://shashikhaya:DBMongo1@cluster0.lflnp.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
 // configure body-parser middleware (helps to decode the body from a HTTP request)
 app.use(bodyParser.json())
