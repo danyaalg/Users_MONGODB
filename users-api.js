@@ -2,6 +2,7 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const MongoClient = require('mongodb')
+const jwt = require('jsonwebtoken')
 
 // initialise the server
 const app = express()
@@ -13,6 +14,28 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
 let collection // store the users
+
+/*                                                    SETUP AUTHENICATION                                                    */
+const JWT_SECRET = '1234oursecret'
+
+// const authJWT = (req, res, next) => {
+//   const auth = req.headers.authorization
+//   if (auth) {
+//     const token = auth.split(' ')[1]
+//     jwt.verify(token, JWT_SECRET, (err, user) => {
+//       if (err) res.sendStatus(403)
+//       req.user = user
+//       next()
+//     })
+//   } else {
+//     res.sendStatus(401)
+//   }
+// }
+
+// const requireAdmin = (req, res, next) => {
+//   authJWT(req, res, next)
+//   if (req.user.role !== 'admin') res.status(401).json('Admins only.')
+// }
 
 /*                                                    ROUTING                                                    */
 
@@ -72,6 +95,20 @@ app.put('/users/:id', async (req, res) => {
   }
 })
 
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body
+  const user = await collection.findOne({ username: username, password: password })
+  if (user) {
+    const accessToken = jwt.sign(
+      { username: user.username, role: user.role },
+      JWT_SECRET
+    )
+    res.send({ accessToken })
+  } else {
+    res.send('Username or password incorrect')
+  }
+})
+
 app.delete('/users/:id', async (req, res) => {
   const { id } = req.params
   try {
@@ -85,11 +122,34 @@ app.delete('/users/:id', async (req, res) => {
 })
 
 // start the server
-app.listen(port, () => {
-  MongoClient.connect(URI, (err, db) => { // db is the initialised db object returned from connecting to the URI?
-    if (err) throw err
-    const database = db.db('BNTA')
-    collection = database.collection('users')
-  })
+app.listen(port, async () => {
+  const db = await MongoClient.connect(URI) // db is the initialised db object returned from connecting to the URI?
+  const database = db.db('BNTA')
+  collection = database.collection('users')
+  const dbCollection = await collection.find({}).toArray()
+  if (!dbCollection.length) {
+    database.createCollection('users', {
+      validator: {
+        $jsonSchema: {
+          bsonType: 'object',
+          required: ['username', 'password'],
+          additionalProperties: false,
+          properties: {
+            _id: {
+              bsonType: 'objectId'
+            },
+            username: {
+              bsonType: 'string',
+              description: 'username'
+            },
+            password: {
+              bsonType: 'string',
+              description: 'password'
+            }
+          }
+        }
+      }
+    })
+  }
   console.log(`Server running on port ${port}`)
 })
