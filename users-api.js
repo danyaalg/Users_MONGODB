@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken')
 // initialise the server
 const app = express()
 const port = 3000
-const URI = 'mongodb+srv://shashikhaya:DBMongo1@cluster0.lflnp.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+const URI = 'mongodb+srv://<user>:<pw>@cluster0.lflnp.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
 
 // configure body-parser middleware (helps to decode the body from a HTTP request)
 app.use(bodyParser.json())
